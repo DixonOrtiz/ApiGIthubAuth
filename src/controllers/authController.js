@@ -1,6 +1,6 @@
 const { CLIENT_ID, CLIENT_SECRET } = require("../config/env");
 const axios = require("axios");
-const { githubResponseToJson } = require("../functions/functions");
+const { getGithubUserData } = require("../functions/functions");
 
 exports.handleLogin = async (request, response) => {
   let url = `https://github.com/login/oauth/authorize?client_id=${CLIENT_ID}`;
@@ -8,8 +8,7 @@ exports.handleLogin = async (request, response) => {
 };
 
 exports.handleCallback = async (request, response) => {
-  const { query } = request;
-  const { code } = query;
+  const code = request.query;
 
   if (!code) {
     return response.send({
@@ -18,20 +17,8 @@ exports.handleCallback = async (request, response) => {
     });
   }
 
-  const githubCredentials = {
-    client_id: CLIENT_ID,
-    client_secret: CLIENT_SECRET,
-    code,
-  };
+  userData = await getGithubUserData(code, CLIENT_ID, CLIENT_SECRET);
 
-  const githubResponse = await axios.post(
-    `https://github.com/login/oauth/access_token`,
-    githubCredentials
-  );
-
-  const jsonResponse = githubResponseToJson(githubResponse.data);
-
-  console.log(JSON.stringify(jsonResponse, null, 2));
-
-  response.send(jsonResponse);
+  console.log(userData);
+  response.send(userData);
 };
